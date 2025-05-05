@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/kennethreitz-mcp-applemusic-badge.png)](https://mseep.ai/app/kennethreitz-mcp-applemusic)
+
 # MCP-AppleMusic
 
 A FastMCP server implementation for controlling Apple Music (formerly iTunes) on macOS through AppleScript commands.
