@@ -123,14 +123,23 @@ def test_list_playlists_passes_through_error():
 # ---------------------------------------------------------------------------
 
 def _make_raw(*tracks):
-    """Build _SEP-delimited AppleScript output for the given tracks.
+    """Build mock run_applescript side_effect values for itunes_export_playlist.
 
     Each argument is a track represented as the tuple (name, artist, album,
-    mins, secs). No trailing newline, matching what run_applescript returns
-    after strip(). Tuples of other lengths produce malformed lines useful for
-    testing the skip logic.
+    duration_secs), where duration_secs is total duration in seconds as a
+    number, or a non-numeric string to produce a malformed entry that will be
+    skipped. Returns a list of four SEP-delimited strings — one per property
+    (name, artist, album, duration) — for use as side_effect in patch.object.
     """
-    return "\n".join(mcp_applemusic._SEP.join(str(f) for f in t) for t in tracks)
+    sep = mcp_applemusic._SEP
+    if not tracks:
+        return ["", "", "", ""]
+    return [
+        sep.join(str(t[0]) for t in tracks) + sep,
+        sep.join(str(t[1]) for t in tracks) + sep,
+        sep.join(str(t[2]) for t in tracks) + sep,
+        sep.join(str(t[3]) for t in tracks) + sep,
+    ]
 
 
 def _read_csv(file_path):
@@ -154,9 +163,8 @@ def _tmp_path_for(dest):
 # ---------------------------------------------------------------------------
 
 def test_export_writes_csv_and_cleans_up_tmp(tmp_path):
-    raw = _make_raw(("Hey Jude", "The Beatles", "Past Masters", 7, 4))
     dest = str(tmp_path / "out.csv")
-    with patch.object(mcp_applemusic, "run_applescript", return_value=raw):
+    with patch.object(mcp_applemusic, "run_applescript", side_effect=_make_raw(("Hey Jude", "The Beatles", "Past Masters", 424))):
         result = itunes_export_playlist("Beatles", dest)
 
     rows = _read_csv(dest)
@@ -168,39 +176,35 @@ def test_export_writes_csv_and_cleans_up_tmp(tmp_path):
 
 def test_export_uses_absolute_path_for_relative_input(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    raw = _make_raw(("Song", "Artist", "Album", 3, 0))
-    with patch.object(mcp_applemusic, "run_applescript", return_value=raw):
+    with patch.object(mcp_applemusic, "run_applescript", side_effect=_make_raw(("Song", "Artist", "Album", 180))):
         result = itunes_export_playlist("PL", "out.csv")
     assert result.startswith(f'Exported 1 track from "PL" to {tmp_path / "out.csv"}')
 
 
-@pytest.mark.parametrize("mins,secs,expected", [
-    (3, 5,  "3:05"),
-    (4, 10, "4:10"),
+@pytest.mark.parametrize("dur_secs,expected", [
+    (185,  "3:05"),
+    (250, "4:10"),
 ], ids=["pads-below-ten", "no-pad-at-ten"])
-def test_export_formats_duration(tmp_path, mins, secs, expected):
-    raw = _make_raw(("Song", "Artist", "Album", mins, secs))
+def test_export_formats_duration(tmp_path, dur_secs, expected):
     dest = str(tmp_path / "out.csv")
-    with patch.object(mcp_applemusic, "run_applescript", return_value=raw):
+    with patch.object(mcp_applemusic, "run_applescript", side_effect=_make_raw(("Song", "Artist", "Album", dur_secs))):
         itunes_export_playlist("PL", dest)
     assert _read_csv(dest)[1] == ["Song", "Artist", "Album", expected]
 
 
 def test_export_quotes_fields_with_commas(tmp_path):
-    raw = _make_raw(("You, Me & Us", "Smith, John", "Vol. 1, Remastered", 2, 30))
     dest = str(tmp_path / "out.csv")
-    with patch.object(mcp_applemusic, "run_applescript", return_value=raw):
+    with patch.object(mcp_applemusic, "run_applescript", side_effect=_make_raw(("You, Me & Us", "Smith, John", "Vol. 1, Remastered", 150))):
         itunes_export_playlist("PL", dest)
     assert _read_csv(dest)[1] == ["You, Me & Us", "Smith, John", "Vol. 1, Remastered", "2:30"]
 
 
 def test_export_multiple_tracks(tmp_path):
-    raw = _make_raw(
-        ("Yesterday", "The Beatles", "Help!", 2, 5),
-        ("Let It Be", "The Beatles", "Let It Be", 3, 52),
-    )
     dest = str(tmp_path / "out.csv")
-    with patch.object(mcp_applemusic, "run_applescript", return_value=raw):
+    with patch.object(mcp_applemusic, "run_applescript", side_effect=_make_raw(
+        ("Yesterday", "The Beatles", "Help!", 125),
+        ("Let It Be", "The Beatles", "Let It Be", 232),
+    )):
         result = itunes_export_playlist("Beatles", dest)
 
     rows = _read_csv(dest)
@@ -212,20 +216,19 @@ def test_export_multiple_tracks(tmp_path):
 
 def test_export_empty_playlist(tmp_path):
     dest = str(tmp_path / "out.csv")
-    with patch.object(mcp_applemusic, "run_applescript", return_value=_make_raw()):
+    with patch.object(mcp_applemusic, "run_applescript", side_effect=_make_raw()):
         result = itunes_export_playlist("Empty", dest)
     assert _read_csv(dest) == [["Name", "Artist", "Album", "Duration"]]
     assert result.startswith('Exported 0 tracks from "Empty" to ')
 
 
 def test_export_skips_non_integer_duration(tmp_path):
-    raw = _make_raw(
-        ("Bad Mins", "Artist", "Album", "NaN", "0"),   # non-integer mins — triggers skip
-        ("Bad Secs", "Artist", "Album", "3", "NaN"),   # non-integer secs — triggers skip
-        ("Good Song", "Artist", "Album", 3, 30),
-    )
     dest = str(tmp_path / "out.csv")
-    with patch.object(mcp_applemusic, "run_applescript", return_value=raw):
+    with patch.object(mcp_applemusic, "run_applescript", side_effect=_make_raw(
+        ("Bad Duration 1", "Artist", "Album", "NaN"),       # NaN total secs — triggers skip
+        ("Bad Duration 2", "Artist", "Album", "notanumber"),  # non-numeric — triggers skip
+        ("Good Song", "Artist", "Album", 210),
+    )):
         result = itunes_export_playlist("PL", dest)
     rows = _read_csv(dest)
     assert len(rows) == 2  # header + 1 good track
@@ -234,12 +237,11 @@ def test_export_skips_non_integer_duration(tmp_path):
 
 
 def test_export_skips_and_reports_malformed_lines(tmp_path):
-    raw = _make_raw(
-        ("x", "x", "x", "x", "x", "x"),  # 6 fields — triggers skip
-        ("Good Song", "Artist", "Album", 3, 30),
-    )
     dest = str(tmp_path / "out.csv")
-    with patch.object(mcp_applemusic, "run_applescript", return_value=raw):
+    with patch.object(mcp_applemusic, "run_applescript", side_effect=_make_raw(
+        ("Bad", "Artist", "Album", "notanumber"),  # bad duration — triggers skip
+        ("Good Song", "Artist", "Album", 210),
+    )):
         result = itunes_export_playlist("PL", dest)
 
     rows = _read_csv(dest)
@@ -250,12 +252,11 @@ def test_export_skips_and_reports_malformed_lines(tmp_path):
 
 
 def test_export_reports_multiple_skipped_lines(tmp_path):
-    raw = _make_raw(
-        ("x", "x", "x", "x", "x", "x"),  # 6 fields — triggers skip
-        ("x", "x", "x", "x", "x", "x"),  # 6 fields — triggers skip
-    )
     dest = str(tmp_path / "out.csv")
-    with patch.object(mcp_applemusic, "run_applescript", return_value=raw):
+    with patch.object(mcp_applemusic, "run_applescript", side_effect=_make_raw(
+        ("x", "x", "x", "notanumber"),  # bad duration — triggers skip
+        ("x", "x", "x", "notanumber"),  # bad duration — triggers skip
+    )):
         result = itunes_export_playlist("PL", dest)
     assert _read_csv(dest) == [["Name", "Artist", "Album", "Duration"]]
     assert "2 malformed lines skipped" in result

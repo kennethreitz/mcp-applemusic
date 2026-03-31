@@ -228,53 +228,58 @@ def itunes_export_playlist(name: str, file_path: str) -> str:
     except OSError as e:
         return f"Error: {e}"
 
-    script = f"""
-    tell application "Music"
-        set thePlaylist to user playlist "{name}"
-        set output to ""
-        repeat with t in (every track of thePlaylist)
-            set dur to round (duration of t)
-            set mins to dur div 60
-            set secs to dur mod 60
-            set output to output & (name of t) & "{_SEP}" & (artist of t) & "{_SEP}" & (album of t) & "{_SEP}" & mins & "{_SEP}" & secs & linefeed
-        end repeat
-        return output
-    end tell
-    """
+    def fetch_prop(prop):
+        """Bulk-fetch a single track property as a SEP-delimited string, return as list."""
+        script = f'''
+tell application "Music"
+    set thePlaylist to user playlist "{name}"
+    set vals to {prop} of every track of thePlaylist
+    set output to ""
+    repeat with v in vals
+        if v is missing value then
+            set output to output & "{_SEP}"
+        else
+            set output to output & (v as text) & "{_SEP}"
+        end if
+    end repeat
+    return output
+end tell'''
+        raw = run_applescript(script)
+        if raw.startswith("Error:"):
+            raise RuntimeError(raw)
+        # Split on SEP; trailing SEP produces a spurious empty last element
+        items = raw.split(_SEP)
+        return items[:-1] if items and items[-1] == "" else items
 
     with contextlib.ExitStack() as cleanup:
         cleanup.enter_context(tmp_file)
         cleanup.callback(_unlink_if_exists, tmp_path)
-        # ExitStack unwinds LIFO: unlink runs before close. On Unix the file
-        # descriptor remains valid after unlink, so close still succeeds.
 
-        raw = run_applescript(script)
-        if raw.startswith("Error:"):
-            return raw  # ExitStack unwinds on exit: tmp_file closed, tmp_path unlinked
+        try:
+            names     = fetch_prop("name")
+            artists   = fetch_prop("artist")
+            albums    = fetch_prop("album")
+            durations = fetch_prop("duration")
+        except RuntimeError as e:
+            return str(e)
 
         writer = csv.writer(tmp_file)
         writer.writerow(["Name", "Artist", "Album", "Duration"])
         track_count = 0
         skipped = 0
-        for line in raw.splitlines():
-            if not line:
-                continue
-            parts = line.split(_SEP)
-            if len(parts) != 5:
-                skipped += 1
-                continue
-            track_name, artist, album, mins, secs = parts
+        for n, ar, al, d in zip(names, artists, albums, durations):
             try:
-                duration = f"{int(mins)}:{int(secs):02d}"
-            except ValueError:
+                secs = round(float(d)) if d else None
+                duration = f"{secs // 60}:{secs % 60:02d}" if secs is not None else ""
+            except (ValueError, TypeError):
                 skipped += 1
                 continue
-            writer.writerow([track_name, artist, album, duration])
+            writer.writerow([n, ar, al, duration])
             track_count += 1
 
         tmp_file.close()
         os.replace(tmp_path, abs_path)
-        cleanup.pop_all()  # success: discard cleanup callbacks
+        cleanup.pop_all()
 
     msg = f'Exported {track_count} {"track" if track_count == 1 else "tracks"} from "{name}" to {abs_path}'
     if skipped:
