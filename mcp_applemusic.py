@@ -234,15 +234,18 @@ def itunes_export_playlist(name: str, file_path: str) -> str:
 tell application "Music"
     set thePlaylist to user playlist "{name}"
     set vals to {prop} of every track of thePlaylist
-    set output to ""
+    set output to {{}}
     repeat with v in vals
         if v is missing value then
-            set output to output & "{_SEP}"
+            set end of output to ""
         else
-            set output to output & (v as text) & "{_SEP}"
+            set end of output to (v as text)
         end if
     end repeat
-    return output
+    set AppleScript's text item delimiters to "{_SEP}"
+    set result to output as text
+    set AppleScript's text item delimiters to ""
+    return result
 end tell'''
         raw = run_applescript(script)
         if raw.startswith("Error:"):
