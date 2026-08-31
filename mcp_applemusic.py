@@ -1364,7 +1364,97 @@ def itunes_get_listening_stats_by_date(start_date: str = "", end_date: str = "")
     for idx, (song, artist, count) in enumerate(top_songs, 1):
         lines.append(f"{idx}. {song} — {artist} ({count} play(s))")
 
-    return "\n".join(lines)
+@mcp.tool()
+def itunes_sync_library_history() -> str:
+    """
+    Sync all lifetime play counts and recent plays from your iCloud & iPhone Apple Music library into your local SQLite history.
+    """
+    if sys.platform != "darwin":
+        return "Error: Library sync is only supported on macOS."
+
+    _init_db()
+    script = """
+    tell application "Music"
+        set trackList to {}
+        repeat with t in (every track of playlist "Library")
+            set pCount to (played count of t)
+            if pCount > 0 then
+                set pDate to ""
+                try
+                    set pDate to (played date of t) as string
+                end try
+                set tName to name of t
+                set tArtist to artist of t
+                set tAlbum to album of t
+                set tDur to duration of t as integer
+                set end of trackList to (tName & "|||" & tArtist & "|||" & tAlbum & "|||" & (pCount as string) & "|||" & (tDur as string) & "|||" & pDate)
+            end if
+        end repeat
+        set AppleScript's text item delimiters to "###"
+        return trackList as string
+    end tell
+    """
+    res = run_applescript(script)
+    if res.startswith("Error:") or not res.strip():
+        return "Unable to read library tracks for sync."
+
+    items = [x for x in res.split("###") if x.strip()]
+    months = {
+        "January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6,
+        "July": 7, "August": 8, "September": 9, "October": 10, "November": 11, "December": 12
+    }
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    synced_count = 0
+    total_sec_added = 0
+
+    for item in items:
+        parts = item.split("|||")
+        if len(parts) >= 5:
+            name, artist, album, count_str, dur_str = parts[:5]
+            try:
+                p_count = int(count_str)
+                dur = int(dur_str)
+            except ValueError:
+                continue
+
+            date_str = parts[5] if len(parts) > 5 else ""
+            ts = None
+            if date_str:
+                try:
+                    clean_d = date_str.split(", ")[1] if ", " in date_str else date_str
+                    clean_d = clean_d.replace(" at ", " ")
+                    d_parts = clean_d.split()
+                    day = int(d_parts[0])
+                    month = months.get(d_parts[1], datetime.datetime.now().month)
+                    year = int(d_parts[2])
+                    time_p = d_parts[3].split(":")
+                    hour = int(time_p[0])
+                    minute = int(time_p[1])
+                    second = int(time_p[2])
+                    ts = datetime.datetime(year, month, day, hour, minute, second).strftime("%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            c.execute("SELECT SUM(played_sec) FROM plays WHERE track_name = ? AND artist_name = ?", (name, artist))
+            existing = c.fetchone()[0] or 0
+            total_needed_sec = p_count * dur
+
+            if total_needed_sec > existing:
+                diff_sec = total_needed_sec - existing
+                c.execute("""
+                    INSERT INTO plays (track_name, artist_name, album_name, duration_sec, played_sec, skipped, timestamp)
+                    VALUES (?, ?, ?, ?, ?, 0, ?)
+                """, (name, artist, album, dur, diff_sec, ts))
+                synced_count += 1
+                total_sec_added += diff_sec
+
+    conn.commit()
+    conn.close()
+    return f"Synced {synced_count} tracks ({total_sec_added // 60} minutes) from your iCloud/iPhone Apple Music library into your history journal."
 
 
 @mcp.tool()
