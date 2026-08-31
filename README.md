@@ -4,11 +4,11 @@
 [![Quality: Tier A](https://img.shields.io/badge/Quality-Tier%20A%20(4.5%2F5)-00d992.svg)](https://glama.ai/mcp/servers/suleyman416/mcp-applemusic/score)
 [![Maintenance: Grade B](https://img.shields.io/badge/Maintenance-Grade%20B-f5a623.svg)](https://glama.ai/mcp/servers/suleyman416/mcp-applemusic/score)
 [![License: MIT](https://img.shields.io/badge/License-MIT%20(Grade%20A)-37a169.svg)](https://opensource.org/licenses/MIT)
-[![Tools](https://img.shields.io/badge/Tools-66%20Available-blue.svg)](#complete-suite-of-66-tools)
+[![Tools](https://img.shields.io/badge/Tools-67%20Available-blue.svg)](#complete-suite-of-67-tools)
 
 A comprehensive FastMCP server for controlling Apple Music on macOS with AI agents.
 
-Featuring **66 tools** spanning playback, playlist engineering, listening analytics, Spotify conversion, smart DJ transitions, and audio device control.
+Featuring **67 tools** spanning playback, playlist engineering, listening analytics, Spotify conversion, smart DJ transitions, and audio device control.
 
 ---
 
@@ -169,6 +169,7 @@ itunes_get_playlist_tracks(playlist)       # Get all tracks in a playlist
 itunes_export_playlist(playlist, format)   # Export playlist to JSON, CSV, or Markdown
 
 # 7. Listening Journal & Replay Analytics
+itunes_sync_library_history()              # Sync all lifetime play counts and recent plays from iCloud/iPhone
 itunes_get_monthly_replay(year, month)     # Generate Apple Music Replay report (hours, top songs/artists)
 itunes_get_listening_history(limit, artist)# Chronological playback journal with timestamps & skips
 itunes_get_listening_stats_by_date(start, end) # Custom date-range listening analytics & top charts
