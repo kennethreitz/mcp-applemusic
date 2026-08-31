@@ -97,7 +97,7 @@ Once connected, you can talk to your AI agent naturally:
 
 ---
 
-## Complete Suite of 66 Tools
+## Complete Suite of 67 Tools
 
 ```python
 # 1. Playback & Track Control
@@ -108,8 +108,7 @@ itunes_previous()                          # Go to previous track
 itunes_current_track()                     # Get currently playing track info
 itunes_set_volume(volume)                  # Set volume (0–100)
 itunes_mute(muted)                         # Mute or unmute audio
-itunes_shuffle(enabled)                    # Enable or disable shuffle
-itunes_set_shuffle_mode(mode)              # Set shuffle granularity ('songs', 'albums', 'groupings')
+itunes_set_shuffle_mode(mode)              # Set shuffle mode ('off', 'songs', 'albums', 'groupings')
 itunes_repeat(mode)                        # Set repeat mode ('off', 'one', 'all')
 itunes_seek(seconds)                       # Seek/jump to timestamp in seconds
 itunes_get_position()                      # Get elapsed position & total duration
