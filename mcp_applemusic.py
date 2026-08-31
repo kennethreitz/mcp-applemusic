@@ -1184,87 +1184,83 @@ def itunes_get_monthly_replay(year: int = 0, month: int = 0) -> str:
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # 1. Totals
+    # 1. Fetch raw play rows for the month
     c.execute("""
-        SELECT COUNT(*), SUM(played_sec), SUM(CASE WHEN skipped = 1 THEN 1 ELSE 0 END)
+        SELECT track_name, artist_name, album_name, duration_sec, played_sec, skipped
         FROM plays
         WHERE timestamp >= ? AND timestamp < ?
     """, (start_str, end_str))
-    total_plays, total_sec, total_skips = c.fetchone()
+    all_month_rows = c.fetchall()
+    conn.close()
 
-    if not total_plays or total_plays == 0:
-        conn.close()
+    if not all_month_rows:
         return f"No listening journal data recorded yet for {month_name}."
 
-    total_sec = total_sec or 0
-    total_skips = total_skips or 0
-    hours = total_sec // 3600
-    minutes = (total_sec % 3600) // 60
-    skip_rate = round((total_skips / total_plays) * 100, 1)
-
-    # 2. Top Artists (Standardized Apple Music Replay individual artist attribution)
-    c.execute("""
-        SELECT track_name, artist_name, played_sec
-        FROM plays
-        WHERE timestamp >= ? AND timestamp < ? AND skipped = 0
-    """, (start_str, end_str))
-    artist_rows = c.fetchall()
-
+    total_sec = sum(r[4] or 0 for r in all_month_rows)
+    total_skips = sum(1 for r in all_month_rows if r[5] == 1)
+    
+    # Calculate actual plays per song, artist, and album
+    song_plays = {}
+    song_seconds = {}
     artist_plays = {}
     artist_seconds = {}
-    for t_name, a_name, p_sec in artist_rows:
-        credited_artists = _split_artists(a_name, t_name)
-        for cand in credited_artists:
-            artist_plays[cand] = artist_plays.get(cand, 0) + 1
-            artist_seconds[cand] = artist_seconds.get(cand, 0) + (p_sec or 0)
+    album_plays = {}
+    album_artists = {}
+    actual_total_plays = 0
 
-    ranked_artists = sorted(artist_seconds.items(), key=lambda x: (x[1], artist_plays.get(x[0], 0)), reverse=True)[:5]
-    top_artists = [(art, artist_plays.get(art, 0), sec) for art, sec in ranked_artists]
+    for t_name, a_name, al_name, dur, p_sec, sk in all_month_rows:
+        count = max(1, (p_sec or 0) // (dur or 1)) if dur and dur > 0 else 1
+        actual_total_plays += count
 
-    # 3. Top Songs
-    c.execute("""
-        SELECT track_name, artist_name, COUNT(*)
-        FROM plays
-        WHERE timestamp >= ? AND timestamp < ? AND skipped = 0
-        GROUP BY track_name, artist_name
-        ORDER BY COUNT(*) DESC
-        LIMIT 10
-    """, (start_str, end_str))
-    top_songs = c.fetchall()
+        if sk == 0:
+            s_key = (t_name, a_name)
+            song_plays[s_key] = song_plays.get(s_key, 0) + count
+            song_seconds[s_key] = song_seconds.get(s_key, 0) + (p_sec or 0)
 
-    # 4. Top Albums
-    c.execute("""
-        SELECT album_name, artist_name, COUNT(*)
-        FROM plays
-        WHERE timestamp >= ? AND timestamp < ? AND skipped = 0 AND album_name != ''
-        GROUP BY album_name, artist_name
-        ORDER BY COUNT(*) DESC
-        LIMIT 5
-    """, (start_str, end_str))
-    top_albums = c.fetchall()
+            if al_name and al_name.strip():
+                album_plays[al_name] = album_plays.get(al_name, 0) + count
+                album_artists[al_name] = a_name
 
-    conn.close()
+            for cand in _split_artists(a_name, t_name):
+                artist_plays[cand] = artist_plays.get(cand, 0) + count
+                artist_seconds[cand] = artist_seconds.get(cand, 0) + (p_sec or 0)
+
+    hours = total_sec // 3600
+    minutes = (total_sec % 3600) // 60
+    skip_rate = round((total_skips / max(1, actual_total_plays)) * 100, 1)
+
+    # 2. Top Artists (Ranked by listening time)
+    top_artists = sorted(artist_seconds.items(), key=lambda x: (x[1], artist_plays.get(x[0], 0)), reverse=True)[:5]
+
+    # 3. Top Songs (Ranked by play count)
+    top_songs = sorted(song_plays.items(), key=lambda x: (x[1], song_seconds.get(x[0], 0)), reverse=True)[:10]
+
+    # 4. Top Albums (Ranked by play count)
+    top_albums = sorted(album_plays.items(), key=lambda x: x[1], reverse=True)[:5]
 
     lines = [
         f" Apple Music Replay: {month_name}",
         "=" * 42,
         f"⏱ Total Listening Time: {hours}h {minutes}m",
-        f" Total Plays: {total_plays} (Completed: {total_plays - total_skips}, Skipped: {total_skips} | {skip_rate}% skip rate)",
+        f" Total Plays: {actual_total_plays} (Completed: {actual_total_plays - total_skips}, Skipped: {total_skips} | {skip_rate}% skip rate)",
         "",
         " Top Artists:",
     ]
-    for idx, (artist, count, a_sec) in enumerate(top_artists, 1):
-        a_m = (a_sec or 0) // 60
-        lines.append(f"{idx}. {artist} — {count} play(s) ({a_m} mins)")
+    for idx, (artist, a_sec) in enumerate(top_artists, 1):
+        a_m = a_sec // 60
+        plays = artist_plays.get(artist, 0)
+        lines.append(f"{idx}. {artist} — {plays} play(s) ({a_m} mins)")
 
     lines.extend(["", " Top Songs:"])
-    for idx, (song, artist, count) in enumerate(top_songs, 1):
-        lines.append(f"{idx}. {song} — {artist} ({count} play(s))")
+    for idx, ((song, artist), count) in enumerate(top_songs, 1):
+        s_m = song_seconds.get((song, artist), 0) // 60
+        lines.append(f"{idx}. {song} — {artist} ({count} play(s) | {s_m} mins)")
 
     if top_albums:
         lines.extend(["", " Top Albums:"])
-        for idx, (album, artist, count) in enumerate(top_albums, 1):
-            lines.append(f"{idx}. {album} — {artist} ({count} play(s))")
+        for idx, (album, count) in enumerate(top_albums, 1):
+            a_art = album_artists.get(album, "")
+            lines.append(f"{idx}. {album} — {a_art} ({count} play(s))")
 
     return "\n".join(lines)
 
