@@ -2,6 +2,7 @@ import sys
 import datetime
 import json
 from pathlib import Path
+import re
 import sqlite3
 import subprocess
 import threading
@@ -43,6 +44,30 @@ def _init_db():
     """)
     conn.commit()
     conn.close()
+
+
+def _split_artists(artist_str: str, track_title: str = "") -> list:
+    """
+    Split collaborative artist strings (e.g. 'Dave & Kano', 'Dave, Burna Boy', 'Headie One feat. Dave')
+    into individual canonical artist names matching Apple Music's exact artist attribution standards.
+    """
+    if not artist_str:
+        return []
+    raw = artist_str
+    feat_match = re.search(r'\((?:feat\.|ft\.|with)\s+([^)]+)\)', track_title, re.IGNORECASE)
+    if feat_match:
+        raw += f" & {feat_match.group(1)}"
+
+    tokens = re.split(r'\s*(?:&|,|\bfeat\.|\bft\.|\bwith\b|\bx\b|/)\s*', raw, flags=re.IGNORECASE)
+    res = []
+    seen = set()
+    for t in tokens:
+        cleaned = re.sub(r'^[(\[\'"]+|[)\]\'"]+$', '', t.strip()).strip()
+        if cleaned and cleaned.lower() not in ["remix", "single", "deluxe", "edit", "version", "instrumental"]:
+            if cleaned.lower() not in seen:
+                seen.add(cleaned.lower())
+                res.append(cleaned)
+    return res
 
 
 def _log_play(track_name: str, artist_name: str, album_name: str, duration_sec: int, played_sec: int, skipped: int):
@@ -1177,16 +1202,24 @@ def itunes_get_monthly_replay(year: int = 0, month: int = 0) -> str:
     minutes = (total_sec % 3600) // 60
     skip_rate = round((total_skips / total_plays) * 100, 1)
 
-    # 2. Top Artists
+    # 2. Top Artists (Standardized Apple Music Replay individual artist attribution)
     c.execute("""
-        SELECT artist_name, COUNT(*), SUM(played_sec)
+        SELECT track_name, artist_name, played_sec
         FROM plays
         WHERE timestamp >= ? AND timestamp < ? AND skipped = 0
-        GROUP BY artist_name
-        ORDER BY COUNT(*) DESC, SUM(played_sec) DESC
-        LIMIT 5
     """, (start_str, end_str))
-    top_artists = c.fetchall()
+    artist_rows = c.fetchall()
+
+    artist_plays = {}
+    artist_seconds = {}
+    for t_name, a_name, p_sec in artist_rows:
+        credited_artists = _split_artists(a_name, t_name)
+        for cand in credited_artists:
+            artist_plays[cand] = artist_plays.get(cand, 0) + 1
+            artist_seconds[cand] = artist_seconds.get(cand, 0) + (p_sec or 0)
+
+    ranked_artists = sorted(artist_seconds.items(), key=lambda x: (x[1], artist_plays.get(x[0], 0)), reverse=True)[:5]
+    top_artists = [(art, artist_plays.get(art, 0), sec) for art, sec in ranked_artists]
 
     # 3. Top Songs
     c.execute("""
@@ -1327,15 +1360,24 @@ def itunes_get_listening_stats_by_date(start_date: str = "", end_date: str = "")
     minutes = (total_sec % 3600) // 60
     skip_rate = round((total_skips / total_plays) * 100, 1)
 
+    # Top Artists (Apple Replay attribution)
     c.execute("""
-        SELECT artist_name, COUNT(*)
+        SELECT track_name, artist_name, played_sec
         FROM plays
         WHERE timestamp >= ? AND timestamp <= ? AND skipped = 0
-        GROUP BY artist_name
-        ORDER BY COUNT(*) DESC
-        LIMIT 5
     """, (start_date_str, end_date_str))
-    top_artists = c.fetchall()
+    artist_rows = c.fetchall()
+
+    artist_plays = {}
+    artist_seconds = {}
+    for t_name, a_name, p_sec in artist_rows:
+        credited = _split_artists(a_name, t_name)
+        for cand in credited:
+            artist_plays[cand] = artist_plays.get(cand, 0) + 1
+            artist_seconds[cand] = artist_seconds.get(cand, 0) + (p_sec or 0)
+
+    ranked_artists = sorted(artist_seconds.items(), key=lambda x: (x[1], artist_plays.get(x[0], 0)), reverse=True)[:5]
+    top_artists = [(art, artist_plays.get(art, 0), sec) for art, sec in ranked_artists]
 
     c.execute("""
         SELECT track_name, artist_name, COUNT(*)
@@ -2322,8 +2364,16 @@ def itunes_get_listening_personality() -> str:
     skips = skips or 0
     skip_rate = (skips / total_plays) * 100
 
-    c.execute("SELECT artist_name, COUNT(*) FROM plays GROUP BY artist_name ORDER BY COUNT(*) DESC LIMIT 3")
-    top_artists = c.fetchall()
+    c.execute("SELECT track_name, artist_name, played_sec FROM plays WHERE skipped = 0")
+    all_rows = c.fetchall()
+    art_plays = {}
+    art_secs = {}
+    for t_n, a_n, p_s in all_rows:
+        for single_art in _split_artists(a_n, t_n):
+            art_plays[single_art] = art_plays.get(single_art, 0) + 1
+            art_secs[single_art] = art_secs.get(single_art, 0) + (p_s or 0)
+    top_artists = sorted(art_secs.items(), key=lambda x: (x[1], art_plays.get(x[0], 0)), reverse=True)[:3]
+    top_artists = [(a, art_plays.get(a, 0)) for a, s in top_artists]
 
     c.execute("""
         SELECT 
