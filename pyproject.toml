@@ -1,10 +1,48 @@
 [project]
 name = "mcp-applemusic"
-version = "0.1.5"
-description = "A FastMCP server for controlling Apple Music on macOS."
+version = "0.2.2"
+description = "A comprehensive 68-tool FastMCP server for Apple Music on macOS with Spotify playlist importer, listening journal, DJ crossfades, and Apple Replay analytics."
 readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Suleyman Mammadov" }
+]
+keywords = [
+    "apple-music",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "fastmcp",
+    "claude",
+    "cursor",
+    "spotify-to-apple-music",
+    "spotify-importer",
+    "apple-music-replay",
+    "applescript",
+    "macos",
+    "music-player",
+    "dj-transitions",
+    "lyrics"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound/Audio :: Players",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
 requires-python = ">=3.13"
 dependencies = ["mcp>=1.2.1,<2.0.0"]
+
+[project.urls]
+Homepage = "https://github.com/suleyman416/mcp-applemusic"
+Repository = "https://github.com/suleyman416/mcp-applemusic"
+"Glama Registry" = "https://glama.ai/mcp/servers/suleyman416/mcp-applemusic"
+"Smithery Registry" = "https://smithery.ai/server/suleyman416/mcp-applemusic"
+Issues = "https://github.com/suleyman416/mcp-applemusic/issues"
 
 [project.scripts]
 mcp-applemusic = "mcp_applemusic:main"

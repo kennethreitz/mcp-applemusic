@@ -4,11 +4,11 @@
 [![Quality: Tier A](https://img.shields.io/badge/Quality-Tier%20A%20(4.5%2F5)-00d992.svg)](https://glama.ai/mcp/servers/suleyman416/mcp-applemusic/score)
 [![Maintenance: Grade B](https://img.shields.io/badge/Maintenance-Grade%20B-f5a623.svg)](https://glama.ai/mcp/servers/suleyman416/mcp-applemusic/score)
 [![License: MIT](https://img.shields.io/badge/License-MIT%20(Grade%20A)-37a169.svg)](https://opensource.org/licenses/MIT)
-[![Tools](https://img.shields.io/badge/Tools-67%20Available-blue.svg)](#complete-suite-of-67-tools)
+[![Tools](https://img.shields.io/badge/Tools-68%20Available-blue.svg)](#complete-suite-of-68-tools)
 
 A comprehensive FastMCP server for controlling Apple Music on macOS with AI agents.
 
-Featuring **67 tools** spanning playback, playlist engineering, listening analytics, Spotify conversion, smart DJ transitions, and audio device control.
+Featuring **68 tools** spanning playback, playlist engineering, listening analytics, Spotify conversion, smart DJ transitions, and audio device control.
 
 ---
 
@@ -97,7 +97,7 @@ Once connected, you can talk to your AI agent naturally:
 
 ---
 
-## Complete Suite of 67 Tools
+## Complete Suite of 68 Tools
 
 ```python
 # 1. Playback & Track Control
@@ -165,6 +165,7 @@ itunes_find_duplicates(playlist, remove)   # Detect duplicate tracks in a playli
 itunes_delete_playlist(playlist)           # Delete a user playlist
 itunes_list_playlists()                    # List all playlists with track counts
 itunes_get_playlist_tracks(playlist)       # Get all tracks in a playlist
+itunes_get_playlist_summary(playlist)      # Get statistical summary (tracks, duration, top artists & songs)
 itunes_export_playlist(playlist, format)   # Export playlist to JSON, CSV, or Markdown
 
 # 7. Listening Journal & Replay Analytics
