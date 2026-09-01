@@ -1,7 +1,7 @@
 [project]
 name = "mcp-applemusic"
-version = "0.2.1"
-description = "A comprehensive 67-tool FastMCP server for Apple Music on macOS with Spotify playlist importer, listening journal, DJ crossfades, and Apple Replay analytics."
+version = "0.2.2"
+description = "A comprehensive 68-tool FastMCP server for Apple Music on macOS with Spotify playlist importer, listening journal, DJ crossfades, and Apple Replay analytics."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [
