@@ -668,6 +668,103 @@ def itunes_export_playlist(playlist: str, format: str = "json") -> str:
 
 
 @mcp.tool()
+def itunes_get_playlist_summary(playlist: str = "") -> str:
+    """
+    Get a comprehensive statistical summary of a playlist: total tracks, runtime, top artists, and most played tracks.
+
+    Args:
+        playlist: The name of the playlist to inspect. If empty, uses the currently active/selected playlist.
+    """
+    p_name_esc = playlist.replace('"', '\\"') if playlist else ""
+    target_clause = f'playlist "{p_name_esc}"' if playlist else 'current playlist'
+
+    script = f"""
+    tell application "Music"
+        try
+            set p to {target_clause}
+            set pName to name of p
+            set pTracks to tracks of p
+            set tCount to count of pTracks
+            set pDur to duration of p as integer
+            set pDesc to ""
+            try
+                set pDesc to description of p
+            end try
+
+            set trackData to {{}}
+            repeat with t in pTracks
+                set tName to name of t
+                set tArtist to artist of t
+                set tTime to time of t
+                set pCount to (played count of t)
+                set pDate to ""
+                try
+                    set pDate to (played date of t) as string
+                end try
+                set end of trackData to (tName & "|||" & tArtist & "|||" & tTime & "|||" & (pCount as string) & "|||" & pDate)
+            end repeat
+
+            set AppleScript's text item delimiters to "###"
+            return (pName & ":::" & (tCount as string) & ":::" & (pDur as string) & ":::" & pDesc & ":::" & (trackData as string))
+        on error
+            return "Error: Playlist not found or no active playlist."
+        end try
+    end tell
+    """
+    raw = run_applescript(script)
+    if raw.startswith("Error:") or not raw.strip():
+        return f"Error: Could not retrieve summary for playlist '{playlist}'."
+
+    parts = raw.strip().split(":::")
+    if len(parts) < 5:
+        return f"Error: Unexpected output from Apple Music for playlist '{playlist}'."
+
+    name = parts[0]
+    count = int(parts[1]) if parts[1].isdigit() else 0
+    dur_sec = int(parts[2]) if parts[2].isdigit() else 0
+    desc = parts[3]
+    raw_tracks = parts[4].split("###") if parts[4] else []
+
+    hours = dur_sec // 3600
+    mins = (dur_sec % 3600) // 60
+    dur_formatted = f"{hours}h {mins}m" if hours > 0 else f"{mins}m"
+
+    artist_counts = {}
+    parsed_tracks = []
+    for rt in raw_tracks:
+        if "|||" in rt:
+            t_name, t_art, t_time, t_pcount, t_pdate = rt.split("|||")
+            p_c = int(t_pcount) if t_pcount.isdigit() else 0
+            parsed_tracks.append((t_name, t_art, t_time, p_c, t_pdate))
+            for individual_art in _split_artists(t_art, t_name):
+                artist_counts[individual_art] = artist_counts.get(individual_art, 0) + 1
+
+    sorted_artists = sorted(artist_counts.items(), key=lambda x: x[1], reverse=True)
+    top_artists_str = ", ".join([f"{art} ({c})" for art, c in sorted_artists[:5]]) if sorted_artists else "None"
+
+    most_played = sorted(parsed_tracks, key=lambda x: x[3], reverse=True)
+    top_songs = []
+    for t_name, t_art, t_time, p_c, p_date in most_played[:5]:
+        if p_c > 0:
+            top_songs.append(f"• {t_name} — {t_art} ({t_time}) [{p_c} play(s)]")
+        else:
+            top_songs.append(f"• {t_name} — {t_art} ({t_time})")
+
+    out = [
+        f"📊 Playlist Summary: '{name}'",
+        f"• Total Tracks: {count} song(s)",
+        f"• Total Duration: {dur_formatted} ({dur_sec // 60} mins)",
+    ]
+    if desc and desc != "missing value":
+        out.append(f"• Description: {desc}")
+    out.append(f"• Top Artists: {top_artists_str}")
+    out.append("• Top Songs / Most Played:")
+    out.extend(top_songs)
+
+    return "\n".join(out)
+
+
+@mcp.tool()
 def itunes_get_stats() -> str:
     """Generate analytics summary of the Music library (total tracks, playlists, favorites, and hours)."""
     script = """
