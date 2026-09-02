@@ -1,6 +1,7 @@
 # MCP-AppleMusic
 
 [![Glama Score](https://glama.ai/mcp/servers/suleyman416/mcp-applemusic/badges/score.svg)](https://glama.ai/mcp/servers/suleyman416/mcp-applemusic)
+[![M8ven Verified](https://m8ven.ai/badge/mcp/suleyman416-mcp-applemusic-flnqtd?variant=verified)](https://m8ven.ai/mcp/suleyman416-mcp-applemusic-flnqtd)
 [![Quality: Tier A](https://img.shields.io/badge/Quality-Tier%20A%20(4.5%2F5)-00d992.svg)](https://glama.ai/mcp/servers/suleyman416/mcp-applemusic/score)
 [![Maintenance: Grade B](https://img.shields.io/badge/Maintenance-Grade%20B-f5a623.svg)](https://glama.ai/mcp/servers/suleyman416/mcp-applemusic/score)
 [![License: MIT](https://img.shields.io/badge/License-MIT%20(Grade%20A)-37a169.svg)](https://opensource.org/licenses/MIT)
@@ -166,7 +167,7 @@ itunes_delete_playlist(playlist)           # Delete a user playlist
 itunes_list_playlists()                    # List all playlists with track counts
 itunes_get_playlist_tracks(playlist)       # Get all tracks in a playlist
 itunes_get_playlist_summary(playlist)      # Get statistical summary (tracks, duration, top artists & songs)
-itunes_export_playlist(playlist, format)   # Export playlist to JSON, CSV, or Markdown
+itunes_export_playlist(playlist, format)   # Export playlist to JSON, CSV, Markdown, or M3U8
 
 # 7. Listening Journal & Replay Analytics
 itunes_sync_library_history()              # Sync all lifetime play counts and recent plays from iCloud/iPhone
