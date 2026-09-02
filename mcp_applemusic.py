@@ -11,6 +11,7 @@ import urllib.parse
 import urllib.request
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 
 
 def run_applescript(script: str) -> str:
@@ -181,35 +182,35 @@ mcp = FastMCP("iTunesControlServer")
 
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_play() -> str:
     """Start playback in Music (iTunes)."""
     script = 'tell application "Music" to play'
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_pause() -> str:
     """Pause playback in Music (iTunes)."""
     script = 'tell application "Music" to pause'
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False))
 def itunes_next() -> str:
     """Skip to the next track."""
     script = 'tell application "Music" to next track'
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False))
 def itunes_previous() -> str:
     """Return to the previous track."""
     script = 'tell application "Music" to previous track'
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_search(query: str) -> str:
     """
     Search the Music library for tracks whose names contain the given query.
@@ -228,7 +229,7 @@ def itunes_search(query: str) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True))
 def itunes_search_catalog(query: str, limit: int = 5) -> str:
     """
     Search the global Apple Music / iTunes Store catalog (outside user library).
@@ -266,7 +267,7 @@ def itunes_search_catalog(query: str, limit: int = 5) -> str:
 
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False))
 def itunes_play_song(song: str) -> str:
     """
     Search for and play a specific song by name.
@@ -286,7 +287,7 @@ def itunes_play_song(song: str) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False))
 def itunes_create_playlist(name: str) -> str:
     """Create a new playlist in Music with the given name."""
     script = f"""
@@ -302,7 +303,7 @@ def itunes_create_playlist(name: str) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False))
 def itunes_add_to_playlist(song: str, playlist: str) -> str:
     """
     Search for a song by title across all playlists and add the first match
@@ -348,7 +349,7 @@ def itunes_add_to_playlist(song: str, playlist: str) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_list_playlists() -> str:
     """
     List all playlists in the Music library with their track counts.
@@ -370,7 +371,7 @@ def itunes_list_playlists() -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_playlist_tracks(playlist: str) -> str:
     """
     Get all tracks in a named playlist.
@@ -396,7 +397,7 @@ def itunes_get_playlist_tracks(playlist: str) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_current_track() -> str:
     """Get information about the currently playing track."""
     script = """
@@ -412,7 +413,7 @@ def itunes_current_track() -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_set_volume(volume: int) -> str:
     """Set the Music app volume (0-100)."""
     if not 0 <= volume <= 100:
@@ -421,7 +422,7 @@ def itunes_set_volume(volume: int) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_favorite_track(favorited: bool = True) -> str:
     """
     Favorite or unfavorite the currently playing track.
@@ -449,7 +450,7 @@ def itunes_favorite_track(favorited: bool = True) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_rate_track(stars: int) -> str:
     """
     Set a star rating (1 to 5 stars) for the currently playing track.
@@ -474,7 +475,7 @@ def itunes_rate_track(stars: int) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True))
 def itunes_get_lyrics(song: str = "") -> str:
     """
     Get lyrics for the currently playing track (or search lyrics for any song by title/artist).
@@ -532,7 +533,7 @@ def itunes_get_lyrics(song: str = "") -> str:
 
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_seek(seconds: int) -> str:
     """
     Seek/jump to a specific timestamp in seconds in the currently playing track.
@@ -555,7 +556,7 @@ def itunes_seek(seconds: int) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_position() -> str:
     """Get elapsed time and total duration for the currently playing track."""
     script = """
@@ -576,7 +577,7 @@ def itunes_get_position() -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_list_devices() -> str:
     """List all available AirPlay audio output devices and their selection state."""
     script = """
@@ -597,7 +598,7 @@ def itunes_list_devices() -> str:
 
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_set_device(device_name: str) -> str:
     """
     Switch audio output to a specific AirPlay device by name (e.g. HomePod, AirPods, TV).
@@ -618,7 +619,7 @@ def itunes_set_device(device_name: str) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_export_playlist(playlist: str, format: str = "json") -> str:
     """
     Export all tracks in a named playlist to JSON, CSV, or Markdown.
@@ -663,11 +664,17 @@ def itunes_export_playlist(playlist: str, format: str = "json") -> str:
         for idx, i in enumerate(items, 1):
             lines.append(f'| {idx} | {i["title"]} | {i["artist"]} | {i["album"]} |')
         return "\n".join(lines)
+    elif fmt in ("m3u8", "m3u"):
+        lines = ["#EXTM3U", f"#PLAYLIST:{playlist}"]
+        for i in items:
+            lines.append(f'#EXTINF:-1,{i["artist"]} - {i["title"]}')
+            lines.append(f'{i["artist"]} - {i["title"]}.mp3')
+        return "\n".join(lines)
     else:
         return json.dumps({"playlist": playlist, "count": len(items), "tracks": items}, indent=2)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_playlist_summary(playlist: str = "") -> str:
     """
     Get a comprehensive statistical summary of a playlist: total tracks, runtime, top artists, and most played tracks.
@@ -764,7 +771,7 @@ def itunes_get_playlist_summary(playlist: str = "") -> str:
     return "\n".join(out)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_stats() -> str:
     """Generate analytics summary of the Music library (total tracks, playlists, favorites, and hours)."""
     script = """
@@ -790,7 +797,7 @@ def itunes_get_stats() -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_move_playlist_track(playlist: str, from_index: int, to_index: int) -> str:
     """
     Move a track inside a playlist from one position (1-indexed) to another position.
@@ -827,7 +834,7 @@ def itunes_move_playlist_track(playlist: str, from_index: int, to_index: int) ->
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False))
 def itunes_remove_from_playlist(song: str, playlist: str) -> str:
     """
     Remove a track from a playlist by song title.
@@ -858,7 +865,7 @@ def itunes_remove_from_playlist(song: str, playlist: str) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_sort_playlist(playlist: str, sort_by: str = "title") -> str:
     """
     Sort all tracks in a playlist alphabetically by 'title', 'artist', or 'album'.
@@ -926,7 +933,7 @@ def itunes_sort_playlist(playlist: str, sort_by: str = "title") -> str:
     return run_applescript(reorder_script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_favorite_song(song: str, favorited: bool = True) -> str:
     """
     Favorite or unfavorite any song in your library by title.
@@ -956,7 +963,7 @@ def itunes_favorite_song(song: str, favorited: bool = True) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_dislike_track(disliked: bool = True) -> str:
     """
     Mark or un-mark the currently playing track as Disliked for recommendation algorithms.
@@ -980,7 +987,7 @@ def itunes_dislike_track(disliked: bool = True) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_repeat(mode: str = "all") -> str:
     """
     Set playback repeat mode.
@@ -1004,7 +1011,7 @@ def itunes_repeat(mode: str = "all") -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_set_eq(preset: str = "Off") -> str:
     """
     Set Apple Music Equalizer (EQ) preset.
@@ -1026,7 +1033,7 @@ def itunes_set_eq(preset: str = "Off") -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_favorite_playlist(playlist: str, favorited: bool = True) -> str:
     """
     Favorite/Star or unfavorite a playlist in the Music app sidebar.
@@ -1053,7 +1060,7 @@ def itunes_favorite_playlist(playlist: str, favorited: bool = True) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=False))
 def itunes_delete_playlist(playlist: str) -> str:
     """
     Delete a user playlist from the Music library.
@@ -1077,7 +1084,7 @@ def itunes_delete_playlist(playlist: str) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False))
 def itunes_duplicate_playlist(source_playlist: str, new_playlist_name: str) -> str:
     """
     Duplicate/clone an existing playlist into a new playlist.
@@ -1105,7 +1112,7 @@ def itunes_duplicate_playlist(source_playlist: str, new_playlist_name: str) -> s
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False))
 def itunes_merge_playlists(playlist_a: str, playlist_b: str, new_playlist_name: str) -> str:
     """
     Merge tracks from two playlists into a new master playlist (skipping duplicate songs).
@@ -1142,7 +1149,7 @@ def itunes_merge_playlists(playlist_a: str, playlist_b: str, new_playlist_name: 
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False))
 def itunes_find_duplicates(playlist: str, remove: bool = False) -> str:
     """
     Scan a playlist for duplicate songs (sharing the exact same title & artist).
@@ -1184,7 +1191,7 @@ def itunes_find_duplicates(playlist: str, remove: bool = False) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True))
 def itunes_get_artist_top_tracks(artist: str, limit: int = 10) -> str:
     """
     Search Apple Music's global catalog for top tracks by any artist.
@@ -1217,7 +1224,7 @@ def itunes_get_artist_top_tracks(artist: str, limit: int = 10) -> str:
         return f"Error querying catalog top tracks: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True))
 def itunes_get_artist_albums(artist: str, limit: int = 10) -> str:
     """
     Search Apple Music's global catalog for official albums by any artist.
@@ -1250,7 +1257,7 @@ def itunes_get_artist_albums(artist: str, limit: int = 10) -> str:
         return f"Error querying catalog albums: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_monthly_replay(year: int = 0, month: int = 0) -> str:
     """
     Generate an 'Apple Music Replay' listening report for a specific month and year.
@@ -1362,7 +1369,7 @@ def itunes_get_monthly_replay(year: int = 0, month: int = 0) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_listening_history(limit: int = 20, artist: str = "") -> str:
     """
     Get a chronological journal log of recent music plays and skips with timestamps.
@@ -1408,7 +1415,7 @@ def itunes_get_listening_history(limit: int = 20, artist: str = "") -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_listening_stats_by_date(start_date: str = "", end_date: str = "") -> str:
     """
     Get aggregated listening statistics and top artists/songs for a custom date range.
@@ -1499,7 +1506,7 @@ def itunes_get_listening_stats_by_date(start_date: str = "", end_date: str = "")
     for idx, (song, artist, count) in enumerate(top_songs, 1):
         lines.append(f"{idx}. {song} — {artist} ({count} play(s))")
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_sync_library_history() -> str:
     """
     Sync all lifetime play counts and recent plays from your iCloud & iPhone Apple Music library into your local SQLite history.
@@ -1592,7 +1599,7 @@ def itunes_sync_library_history() -> str:
     return f"Synced {synced_count} tracks ({total_sec_added // 60} minutes) from your iCloud/iPhone Apple Music library into your history journal."
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False))
 def itunes_log_current_play() -> str:
     """
     Manually log the currently playing track into the listening journal immediately.
@@ -1629,7 +1636,7 @@ def itunes_log_current_play() -> str:
 
 # --- Audio Technicals & Quality Tools ---
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_track_audio_info(song: str = "") -> str:
     """
     Get technical audio quality information (bitrate, sample rate, BPM, cloud status, format, volume adjustment).
@@ -1667,7 +1674,7 @@ def itunes_get_track_audio_info(song: str = "") -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_set_track_bpm(bpm: int, song: str = "") -> str:
     """
     Set Beats Per Minute (BPM) tempo on a track.
@@ -1693,7 +1700,7 @@ def itunes_set_track_bpm(bpm: int, song: str = "") -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_set_track_start_finish(start: int = 0, finish: int = 0, song: str = "") -> str:
     """
     Set custom playback start and/or finish time offsets (in seconds) for a track.
@@ -1724,7 +1731,7 @@ def itunes_set_track_start_finish(start: int = 0, finish: int = 0, song: str = "
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_set_track_volume_adjustment(adjustment: int, song: str = "") -> str:
     """
     Set relative volume adjustment (-100% to +100%) for track gain normalization.
@@ -1752,7 +1759,7 @@ def itunes_set_track_volume_adjustment(adjustment: int, song: str = "") -> str:
 
 # --- Deep Tagging & Metadata Editor Tools ---
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_track_metadata(song: str = "") -> str:
     """
     Inspect comprehensive metadata for a track (genre, composer, comment, track/disc numbers, compilation, date added, unplayed).
@@ -1796,7 +1803,7 @@ def itunes_get_track_metadata(song: str = "") -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_edit_track_metadata(song: str = "", genre: str = "", composer: str = "", comment: str = "", year: int = 0, track_number: int = 0) -> str:
     """
     Edit and update metadata tags on a track in your library.
@@ -1840,7 +1847,7 @@ def itunes_edit_track_metadata(song: str = "", genre: str = "", composer: str = 
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_favorite_album(favorited: bool = True) -> str:
     """
     Favorite/star or unfavorite the album of the currently playing track.
@@ -1868,7 +1875,7 @@ def itunes_favorite_album(favorited: bool = True) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_rate_album(stars: int) -> str:
     """
     Set a star rating (1–5 stars) for the album of the currently playing track.
@@ -1899,7 +1906,7 @@ def itunes_rate_album(stars: int) -> str:
 
 # --- Artwork Management Tool ---
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_artwork_info(song: str = "") -> str:
     """
     Get information about attached album artwork for a track.
@@ -1936,7 +1943,7 @@ def itunes_get_artwork_info(song: str = "") -> str:
 
 # --- Advanced Playback & Stream Controls ---
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_mute(muted: bool = True) -> str:
     """
     Mute or unmute Apple Music audio playback.
@@ -1955,7 +1962,7 @@ def itunes_mute(muted: bool = True) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_set_shuffle_mode(mode: str = "songs") -> str:
     """
     Set shuffle granularity mode.
@@ -1979,7 +1986,7 @@ def itunes_set_shuffle_mode(mode: str = "songs") -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_set_device_volume(device_name: str, volume: int) -> str:
     """
     Set individual volume (0-100) for a specific AirPlay output device (e.g. HomePod, AirPods, Mac speakers).
@@ -2004,7 +2011,7 @@ def itunes_set_device_volume(device_name: str, volume: int) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True))
 def itunes_open_location(url: str) -> str:
     """
     Open and stream an audio stream URL or Apple Music link directly.
@@ -2025,7 +2032,7 @@ def itunes_open_location(url: str) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_stream_info() -> str:
     """
     Get live stream station title and URL when listening to live/internet radio or Apple Music 1.
@@ -2050,7 +2057,7 @@ def itunes_get_stream_info() -> str:
 
 # --- Playlist Folders & Descriptions ---
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False))
 def itunes_create_playlist_folder(name: str) -> str:
     """
     Create a new playlist folder to organize multiple playlists.
@@ -2071,7 +2078,7 @@ def itunes_create_playlist_folder(name: str) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_move_playlist_to_folder(playlist: str, folder: str) -> str:
     """
     Move an existing playlist into a playlist folder.
@@ -2096,7 +2103,7 @@ def itunes_move_playlist_to_folder(playlist: str, folder: str) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_set_playlist_description(playlist: str, description: str) -> str:
     """
     Set or update the description text on a playlist.
@@ -2121,7 +2128,7 @@ def itunes_set_playlist_description(playlist: str, description: str) -> str:
 
 # --- UI & Window Management Tools ---
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_selected_tracks() -> str:
     """
     Get a list of tracks currently selected/highlighted by the user in the Music app window.
@@ -2147,7 +2154,7 @@ def itunes_get_selected_tracks() -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_set_miniplayer(enabled: bool = True) -> str:
     """
     Toggle the compact MiniPlayer window mode in the Music app.
@@ -2170,7 +2177,7 @@ def itunes_set_miniplayer(enabled: bool = True) -> str:
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_reveal_track(song: str = "") -> str:
     """
     Reveal and highlight a track in the main Music app window.
@@ -2196,7 +2203,7 @@ def itunes_reveal_track(song: str = "") -> str:
 
 # --- Next-Gen Curation & Ecosystem Tools ---
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True))
 def itunes_import_from_spotify(playlist_url: str, playlist_name: str = "") -> str:
     """
     Import and reconstruct a public Spotify playlist or album into Apple Music without any Spotify login.
@@ -2280,7 +2287,7 @@ def itunes_import_from_spotify(playlist_url: str, playlist_name: str = "") -> st
         return f"Error importing Spotify playlist: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True))
 def itunes_generate_share_link(song: str = "") -> str:
     """
     Generate a universal share link (song.link) for friends on Spotify, YouTube, Tidal, etc.
@@ -2324,7 +2331,7 @@ def itunes_generate_share_link(song: str = "") -> str:
     return f"Unable to generate universal share link for: '{query}'"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True))
 def itunes_get_top_charts(country: str = "gb", limit: int = 25) -> str:
     """
     Fetch Apple Music's official Daily Top Charts by country (e.g. 'gb', 'us', 'global', 'ng', 'ca').
@@ -2374,7 +2381,7 @@ def itunes_get_top_charts(country: str = "gb", limit: int = 25) -> str:
 
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=False, openWorldHint=True))
 def itunes_get_new_releases(country: str = "gb", limit: int = 25) -> str:
     """
     Fetch Apple Music's latest official album and single releases by country.
@@ -2407,7 +2414,7 @@ def itunes_get_new_releases(country: str = "gb", limit: int = 25) -> str:
         return f"Error fetching Apple releases: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True))
 def itunes_dj_auto_transition(playlist: str, crossfade_seconds: int = 5, trim_intro: int = 0) -> str:
     """
     Apply intelligent DJ start/finish trim offsets across a playlist for radio-style seamless crossfades.
@@ -2439,7 +2446,7 @@ def itunes_dj_auto_transition(playlist: str, crossfade_seconds: int = 5, trim_in
     return run_applescript(script)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_get_listening_personality() -> str:
     """
     Generate an AI analytical breakdown of your listening habits, signature artists, peak listening hours, and skip patterns.
