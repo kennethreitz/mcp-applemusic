@@ -1499,12 +1499,17 @@ def itunes_get_listening_stats_by_date(start_date: str = "", end_date: str = "")
         "",
         " Top Artists:",
     ]
-    for idx, (artist, count) in enumerate(top_artists, 1):
-        lines.append(f"{idx}. {artist} ({count} play(s))")
+    for idx, (artist, count, sec) in enumerate(top_artists, 1):
+        art_h = sec // 3600
+        art_m = (sec % 3600) // 60
+        time_str = f"{art_h}h {art_m}m" if art_h > 0 else f"{art_m}m"
+        lines.append(f"{idx}. {artist} — {count} play(s) ({time_str})")
 
     lines.extend(["", " Top Songs:"])
     for idx, (song, artist, count) in enumerate(top_songs, 1):
         lines.append(f"{idx}. {song} — {artist} ({count} play(s))")
+
+    return "\n".join(lines)
 
 @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False))
 def itunes_sync_library_history() -> str:
@@ -1633,6 +1638,7 @@ def itunes_log_current_play() -> str:
             dur = 0
         _log_play(t_name, a_name, al_name, dur, pos, 0)
         return f"Logged play to journal: '{t_name}' — {a_name} ({pos}s played)"
+    return "No active track to log."
 
 # --- Audio Technicals & Quality Tools ---
 
